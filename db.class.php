@@ -2,7 +2,7 @@
 /**
  * PHP PDO class
  *  
- * @version 1.0 beta 1
+ * @version 1.0 beta 1.1
  * @author	Łukasz Szymkowiak
  * @link		http://www.lszymkowiak.pl
  * @license	This work is licensed under a Creative Commons Attribution 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/
@@ -59,7 +59,6 @@ class db {
 		$this->db_password = $password;
 		$this->db_options = $options;
 		try {
-			echo 'aaa';
 			$this->pdo = new PDO( $this->db_dsn, $this->db_user, $this->db_password, $this->db_options );
 		} catch( PDOException $e ) {
 			$this->_show_error( 'Failed to connect database' );
