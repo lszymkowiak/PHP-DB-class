@@ -2,7 +2,7 @@
 /**
  * PHP PDO class
  *  
- * @version 1.0 beta 1.1
+ * @version 1.0 beta 1.2
  * @author	Łukasz Szymkowiak
  * @link		http://www.lszymkowiak.pl
  * @license	This work is licensed under a Creative Commons Attribution 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/
