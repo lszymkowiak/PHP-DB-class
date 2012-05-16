@@ -1,8 +1,11 @@
 <?php
 /**
  * PHP PDO class
- *  
- * @version 1.0 beta 1.2
+ * provide an easy way to work with databases with PHP using PDO extension
+ *
+ * method names and some code are based on ezSQL by Justin Vincent
+ *
+ * @version	2.0 beta
  * @author	Łukasz Szymkowiak
  * @link		http://www.lszymkowiak.pl
  * @license	This work is licensed under a Creative Commons Attribution 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/
@@ -13,10 +16,9 @@ class db {
 	
 	private $pdo = null;
 	
-	private $db_dsn = null;
-	private $db_user = null;
-	private $db_password = null;
-	private $db_options = null;
+	private $db_dsn = DB_DSN;
+	private $db_user = DB_USER;
+	private $db_password = DB_PASSWORD;
 	
 	private $start_time = null;
 	private $exec_time = null;
@@ -26,7 +28,8 @@ class db {
 	private $debug_once = false;
 	private $method = null;
 	private $query = null;
-	private $result = false;
+	//private $output = null;
+	private $result = null;
 	
 	public $insert_id = null;
 	public $affected_rows = null;
@@ -40,9 +43,9 @@ class db {
 	 *
 	 * @access  public
 	 */
-	public static function getInstance( $dsn=false, $username=false, $password=false, $options=array() ) {
+	public static function get_instance() {
 		if ( isset( self::$db_instance ) == false ) {
-			self::$db_instance = new db( $dsn, $username, $password, $driver_options );
+			self::$db_instance = new db();
 		}
 		return self::$db_instance;
 	}
@@ -53,13 +56,9 @@ class db {
 	 *
 	 * @access  private
 	 */
-	private function __construct( $dsn, $username, $password, $options ) {
-		$this->db_dsn = $dsn;
-		$this->db_user = $username;
-		$this->db_password = $password;
-		$this->db_options = $options;
+	private function __construct() {
 		try {
-			$this->pdo = new PDO( $this->db_dsn, $this->db_user, $this->db_password, $this->db_options );
+			$this->pdo = new PDO( $this->db_dsn, $this->db_user, $this->db_password );
 		} catch( PDOException $e ) {
 			$this->_show_error( 'Failed to connect database' );
 		}
@@ -77,18 +76,18 @@ class db {
 		$this->method = __METHOD__;
 		if ( $statement = $this->_query( $query ) ) {
 			$this->result = $statement->rowCount();
-			$this->_show_debug();
 		}
+		$this->_show_debug();
 		$this->debug_once = false;
 		return $this->result;
 	}
 	
 	
 	/**
-	 * executes query and returns single value
+	 * executes query and returns single variable
 	 *
 	 * @access	public
-	 * @param 	string	$query
+	 * @param 	string	$query		query to execute
 	 * @return	string
 	 */
 	public function get_var( $query ) {
@@ -114,7 +113,7 @@ class db {
 	public function get_row( $query, $output='OBJECT' ) {
 		$this->method = __METHOD__;
  		if ( $statement = $this->_query( $query ) ) {
-			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
+			$output = array_key_exists( $this->output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetch( $this->mode[$output] );
  			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
 			$this->_show_debug();
@@ -134,9 +133,8 @@ class db {
 	public function get_col( $query ) {
 		$this->method = __METHOD__;
 		if ( $statement = $this->_query( $query ) ) {
-			$this->result = array();
 			while ( $row = $statement->fetchColumn() ) {
-				array_push( $this->result, $row );
+				$this->result[] = $row;
 			}
 			$this->_show_debug();
 		}
@@ -173,17 +171,19 @@ class db {
 	 * @access	public
 	 * @param 	string	$query
 	 * @param 	string	$output
-	 * @return	array
+	 * @return	mixed
 	 */
 	public function get_assoc( $query, $col, $output='OBJECT' ) {
+		$this->method = __METHOD__;
  		if ( $statement = $this->_query( $query ) ) {
-			$this->result = array();
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			while ( $row = $statement->fetch( $this->mode[$output] ) ) {
  				if ( $output == 'OBJECT' ) {
  					$this->result[$row->$col] = $row;
+					unset( $this->result[$row->$col] );
  				} else {
  					$this->result[$row[$col]] = $row;
+					unset( $this->result[$row[$col]] );
  				}
  			}
 			$this->_show_debug();
@@ -201,7 +201,8 @@ class db {
 	 * @return	string
 	 */
 	public function escape( $string ) {
-		return mysql_escape_string( stripslashes( $str ) );
+		//return mysql_escape_string( stripslashes( $str ) );
+		return addslashes( stripslashes( $string ) );
 	}
 	
 	
@@ -209,10 +210,10 @@ class db {
 	 * turns on or off errors displaying
 	 *
 	 * @access	public
-	 * @param		bool		$bool
+	 * @param		bool		$state
 	 */
-	public function error( $bool=true ) {
-		$this->error = $bool;
+	public function error( $state=true ) {
+		$this->error = $state;
 	}
 	
 	
@@ -220,10 +221,10 @@ class db {
 	 * turns on or off debug displaying
 	 *
 	 * @access	public
-	 * @param		bool		$bool
+	 * @param		bool		$state
 	 */
-	public function debug( $bool=true ) {
-		$this->debug = $bool;
+	public function debug( $state=true ) {
+		$this->debug = $state;
 	}
 	
 	
@@ -279,12 +280,25 @@ class db {
 		$this->insert_id = null;
 		$this->affected_rows = null;
 		$this->num_rows = null;
-		$this->result = false;
+		switch( $this->method ) { 
+			case __CLASS__.'::query';
+				$this->result = 0;
+				break;
+			case __CLASS__.'::get_var':
+				$this->result = false;
+				break;
+			case __CLASS__.'::get_row':
+				$this->result = ( $this->output == 'ARRAY' ? array() : null );
+				break;
+			default:
+				$this->result = array();
+				break;
+		}
 	}
 		
 	
 	/**
-	 * displays debuga
+	 * displays query debug (method name, query string, execution time, number of rows in result, affected rows, insert ID, query result)
 	 *
 	 * @access	private
 	 */
@@ -296,11 +310,10 @@ class db {
 			echo $this->num_rows !== null ? '<br /><b>NUM_ROWS:</b> ' . $this->num_rows : '';
 			echo $this->affected_rows !== null ? '<br /><b>AFFECTED_ROWS:</b> ' . $this->affected_rows : '';
 			echo $this->insert_id !== null ? '<br /><b>INSERT_ID:</b> ' . $this->insert_id : '';
-			if ( empty( $this->result ) == false ) {
-				echo '<pre>';
-				print_r( $this->result );
-				echo '</pre>';
-			}
+			echo '<br /><b>DB_RESULT:</b>:';
+			echo '<pre>';
+			print_r( $this->result );
+			echo '</pre>';
 			echo '<hr />';
 		}
 	}
