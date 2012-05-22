@@ -17,8 +17,8 @@ class db {
 	private $pdo = null;
 	
 	private $db_dsn = DB_DSN;
-	private $db_user = DB_USER;
-	private $db_password = DB_PASSWORD;
+	private $db_user = null;
+	private $db_password = null;
 	
 	private $start_time = null;
 	private $exec_time = null;
@@ -28,7 +28,6 @@ class db {
 	private $debug_once = false;
 	private $method = null;
 	private $query = null;
-	//private $output = null;
 	private $result = null;
 	
 	public $insert_id = null;
@@ -57,10 +56,12 @@ class db {
 	 * @access  private
 	 */
 	private function __construct() {
+		$this->db_user = defined( 'DB_USER' ) ? DB_USER : $this->db_user;
+		$this->db_password = defined( 'DB_PASSWORD' ) ? DB_PASSWORD : $this->db_password;
 		try {
 			$this->pdo = new PDO( $this->db_dsn, $this->db_user, $this->db_password );
 		} catch( PDOException $e ) {
-			$this->_show_error( 'Failed to connect database' );
+			$this->_show_error( $e->getMessage() );
 		}
 	}
 	
@@ -95,8 +96,8 @@ class db {
 		if ( $statement = $this->_query( $query ) ) {
 			$this->result = $statement->fetchColumn();
  			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
-			$this->_show_debug();
 		}
+		$this->_show_debug();
 		$this->debug_once = false;
 		return $this->result;
 	}
@@ -116,8 +117,8 @@ class db {
 			$output = array_key_exists( $this->output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetch( $this->mode[$output] );
  			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
-			$this->_show_debug();
  		}
+		$this->_show_debug();
  		$this->debug_once = false;
  		return $this->result;
 	}
@@ -136,8 +137,8 @@ class db {
 			while ( $row = $statement->fetchColumn() ) {
 				$this->result[] = $row;
 			}
-			$this->_show_debug();
 		}
+		$this->_show_debug();
  		$this->debug_once = false;
 		return $this->result;
  	}
@@ -157,8 +158,8 @@ class db {
  		if ( $statement = $this->_query( $query ) ) {
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetchAll( $this->mode[$output] );
-			$this->_show_debug();
  		}
+		$this->_show_debug();
 		$this->debug_once = false;
 		return $this->result;
 	}
@@ -180,14 +181,12 @@ class db {
 			while ( $row = $statement->fetch( $this->mode[$output] ) ) {
  				if ( $output == 'OBJECT' ) {
  					$this->result[$row->$col] = $row;
-					unset( $this->result[$row->$col] );
  				} else {
  					$this->result[$row[$col]] = $row;
-					unset( $this->result[$row[$col]] );
  				}
  			}
-			$this->_show_debug();
  		}
+		$this->_show_debug();
  		$this->debug_once = false;
 		return $this->result;
 	}
@@ -201,7 +200,6 @@ class db {
 	 * @return	string
 	 */
 	public function escape( $string ) {
-		//return mysql_escape_string( stripslashes( $str ) );
 		return addslashes( stripslashes( $string ) );
 	}
 	
