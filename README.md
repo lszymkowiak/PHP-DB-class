@@ -6,30 +6,33 @@ provide an easy way to work with databases with PHP using PDO extension
 Initialization
 --------------
 
-### 1. Define the database connection parameters ###
+### 1. Include db class ###
 
-**DB\_DSN** - Data Source Name, required to connect database
+    require_once( 'db.class.php' );
 
-**DB\_USER** - database user name, optional if not specified null is passed
+### 2. Define the database connection parameters ###
 
-**DB\_PASSWORD**  - database password, optional if not specified null is passed
+**db\_dsn** - Data Source Name, required to connect database
+
+**db\_user** - database user name, optional if not specified null is passed
+
+**db\_password**  - database password, optional if not specified null is passed
 
 More information about connecting databesa using PDO can be found in [PHP Manual](http://www.php.net/manual/en/pdo.construct.php)
 
 *MySQL example:*
 
-    define( DB_DSN, 'mysql:host=localhost;dbname=example' );
-    define( DB_USER, 'user' );
-    define( DB_PASSWORD, 'passwd' );
+    db::configure( 'db_dsn', 'mysql:host=localhost;dbname=example' );
+    db::configure( 'db_user', 'user' );
+    db::configure( 'db_password', 'passwd' );
 
 *PostgreSQL example:*
 
-    define( DB_DSN, 'pgsql:host=localhost;port=5432;dbname=example;user=user;password=passwd' );
+    db::configure( 'db_dsn', 'pgsql:host=localhost;port=5432;dbname=example;user=user;password=passwd' );
 
 
-### 2. Include db.class.php file and initialize db class object ###
+### 3. Initialize db class object ###
 
-    require_once( 'db.class.php' );
     $db = db::get_instance();
 
 Database manipulation

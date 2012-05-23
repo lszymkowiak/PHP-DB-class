@@ -1,26 +1,28 @@
 <?php
 
 /**
- * define the database connection parameters
- * these defines are passed as parameters to PDO::__construct() ( string $dsn [, string $username [, string $password ]] )
- * DB_DSN 			$dsn 			required to connect database
- * DB_USER 			$username optional if not specified null is passed
- * DB_PASSWORD	$password optional if not specified null is passed
-*/
+ * include db class
+ */
+require_once( 'db.class.php' );
 
-// MySQL example:
-define( DB_DSN, 'mysql:host=localhost;dbname=example' );
-define( DB_USER, 'user' );
-define( DB_PASSWORD, 'passwd' );
+/**
+ * configure database connection parameters
+ *
+ * db_dsn				required to connect database
+ * db_user			optional if not specified null is passed
+ * db_password	optional if not specified null is passed
+*/
+db::configure( 'db_dsn', 'mysql:host=localhost;dbname=example' );
+db::configure( 'db_user', 'user' );
+db::configure( 'db_password', 'passwd' );
 
 // PostgreSQL example
-// define( DB_DSN, 'pgsql:host=localhost;port=5432;dbname=example;user=user;password=passwd' );
+// db::configure( 'db_dsn', 'pgsql:host=localhost;port=5432;dbname=example;user=user;password=passwd' );
 
 
 /**
- * include db.class.php file and initialize db class object
+ * initialize db class object
  */
-require_once( 'db.class.php' );
 $db = db::get_instance();
 
 

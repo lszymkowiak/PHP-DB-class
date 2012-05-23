@@ -16,9 +16,9 @@ class db {
 	
 	private $pdo = null;
 	
-	private $db_dsn = DB_DSN;
-	private $db_user = null;
-	private $db_password = null;
+	static $db_dsn = null;
+	static $db_user = null;
+	static $db_password = null;
 	
 	private $start_time = null;
 	private $exec_time = null;
@@ -35,6 +35,20 @@ class db {
 	public $num_rows = null;
 	
 	private $mode = array ( 'OBJECT' => PDO::FETCH_OBJ, 'ARRAY' => PDO::FETCH_ASSOC );
+	
+	
+	/**
+	 * configure database connection properities
+	 *
+	 * @access	public
+	 * @param		string	$setting
+	 * @param		string	$value
+	 */
+	public static function configure( $setting, $value=null ) {
+		if ( property_exists( __CLASS__, $setting ) ) {
+			self::$$setting = $value;
+		}
+	}
 	
 	
 	/**
@@ -56,10 +70,8 @@ class db {
 	 * @access  private
 	 */
 	private function __construct() {
-		$this->db_user = defined( 'DB_USER' ) ? DB_USER : $this->db_user;
-		$this->db_password = defined( 'DB_PASSWORD' ) ? DB_PASSWORD : $this->db_password;
 		try {
-			$this->pdo = new PDO( $this->db_dsn, $this->db_user, $this->db_password );
+			$this->pdo = new PDO( self::$db_dsn, self::$db_user, self::$db_password );
 		} catch( PDOException $e ) {
 			$this->_show_error( $e->getMessage() );
 		}
