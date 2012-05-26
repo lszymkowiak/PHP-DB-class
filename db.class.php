@@ -90,7 +90,7 @@ class db {
 		if ( $statement = $this->_query( $query ) ) {
 			$this->result = $statement->rowCount();
 		}
-		$this->_show_debug();
+		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
 		$this->debug_once = false;
 		return $this->result;
 	}
@@ -109,7 +109,7 @@ class db {
 			$this->result = $statement->fetchColumn();
  			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
 		}
-		$this->_show_debug();
+		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
 		$this->debug_once = false;
 		return $this->result;
 	}
@@ -130,7 +130,7 @@ class db {
 			$this->result = $statement->fetch( $this->mode[$output] );
  			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
  		}
-		$this->_show_debug();
+		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
  		$this->debug_once = false;
  		return $this->result;
 	}
@@ -150,7 +150,7 @@ class db {
 				$this->result[] = $row;
 			}
 		}
-		$this->_show_debug();
+		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
  		$this->debug_once = false;
 		return $this->result;
  	}
@@ -171,7 +171,7 @@ class db {
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetchAll( $this->mode[$output] );
  		}
-		$this->_show_debug();
+		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
 		$this->debug_once = false;
 		return $this->result;
 	}
@@ -198,7 +198,7 @@ class db {
  				}
  			}
  		}
-		$this->_show_debug();
+		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
  		$this->debug_once = false;
 		return $this->result;
 	}
@@ -313,19 +313,17 @@ class db {
 	 * @access	private
 	 */
 	private function _show_debug() {
-		if ( $this->debug === true || $this->debug_once === true ) {
-			$this->exec_time = sprintf( "%01.10f", microtime(true) - $this->start_time );
-			echo '<span style="color:#999;"><b>' . $this->method . '</b>( "' . $this->query . '" )</span>';
-			echo '<br /><b>EXECUTION_TIME:</b> ' . $this->exec_time . 's';
-			echo $this->num_rows !== null ? '<br /><b>NUM_ROWS:</b> ' . $this->num_rows : '';
-			echo $this->affected_rows !== null ? '<br /><b>AFFECTED_ROWS:</b> ' . $this->affected_rows : '';
-			echo $this->insert_id !== null ? '<br /><b>INSERT_ID:</b> ' . $this->insert_id : '';
-			echo '<br /><b>DB_RESULT:</b>:';
-			echo '<pre>';
-			print_r( $this->result );
-			echo '</pre>';
-			echo '<hr />';
-		}
+		$this->exec_time = sprintf( "%01.10f", microtime(true) - $this->start_time );
+		echo '<span style="color:#999;"><b>' . $this->method . '</b>( "' . $this->query . '" )</span>';
+		echo '<br /><b>EXECUTION_TIME:</b> ' . $this->exec_time . 's';
+		echo $this->num_rows !== null ? '<br /><b>NUM_ROWS:</b> ' . $this->num_rows : '';
+		echo $this->affected_rows !== null ? '<br /><b>AFFECTED_ROWS:</b> ' . $this->affected_rows : '';
+		echo $this->insert_id !== null ? '<br /><b>INSERT_ID:</b> ' . $this->insert_id : '';
+		echo '<br /><b>DB_RESULT:</b>:';
+		echo '<pre>';
+		print_r( $this->result );
+		echo '</pre>';
+		echo '<hr />';
 	}
 	
 	
