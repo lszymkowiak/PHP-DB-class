@@ -1,13 +1,13 @@
 <?php
 /**
- * PHP PDO class
+ * PHP-DB-class
  * provide an easy way to work with databases with PHP using PDO extension
  *
  * method names and some code are based on ezSQL by Justin Vincent
  *
  * @version	2.0 beta
  * @author	Łukasz Szymkowiak
- * @link		http://www.lszymkowiak.pl
+ * @link		http://www.lszymkowiak.pl/db
  * @license	This work is licensed under a Creative Commons Attribution 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/
  */
 class db {

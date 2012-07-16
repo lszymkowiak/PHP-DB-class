@@ -1,4 +1,4 @@
-PHP-PDO-class
+PHP-DB-class
 =============
 
 provide an easy way to work with databases with PHP using PDO extension
