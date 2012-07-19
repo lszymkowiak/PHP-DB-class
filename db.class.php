@@ -5,40 +5,47 @@
  *
  * method names and some code are based on ezSQL by Justin Vincent
  *
- * @version	2.0 beta
- * @author	Łukasz Szymkowiak
- * @link		http://www.lszymkowiak.pl/db
- * @license	This work is licensed under a Creative Commons Attribution 3.0 Unported License. To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/
+ * @version		2.0
+ * @author		Łukasz Szymkowiak
+ * @link			http://www.lszymkowiak.pl/db
+ * @license		This work is licensed under a Creative Commons Attribution 3.0 Unported License. 
+ *						To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/
  */
 class db {
 	
+	/**
+	 * insert ID from last query
+	 */
+	public $insert_id = null;
+	
+	/**
+	 * number of rows affected by insert,update,replace,delete query
+	 */
+	public $affected_rows = null;
+	
+	/**
+	 * number of rows returned by select query
+	 */
+	public $num_rows = null;
+	
 	private static $db_instance;
-	
+	private static $db_dsn = null;
+	private static $db_user = null;
+	private static $db_password = null;
 	private $pdo = null;
-	
-	static $db_dsn = null;
-	static $db_user = null;
-	static $db_password = null;
-	
-	private $start_time = null;
-	private $exec_time = null;
-	
 	private $error = true;
 	private $debug = false;
 	private $debug_once = false;
 	private $method = null;
 	private $query = null;
 	private $result = null;
-	
-	public $insert_id = null;
-	public $affected_rows = null;
-	public $num_rows = null;
-	
+	private $start_time = null;
+	private $exec_time = null;
 	private $mode = array ( 'OBJECT' => PDO::FETCH_OBJ, 'ARRAY' => PDO::FETCH_ASSOC );
 	
 	
 	/**
-	 * configure database connection properities
+	 * configure db class properities
 	 *
 	 * @access	public
 	 * @param		string	$setting
@@ -65,7 +72,7 @@ class db {
 	
 	
 	/**
-	 * creates a connection to a database
+	 * create a connection to a database
 	 *
 	 * @access  private
 	 */
@@ -87,17 +94,18 @@ class db {
 	 */
 	public function query( $query ) {
 		$this->method = __METHOD__;
-		if ( $statement = $this->_query( $query ) ) {
+		$this->query = trim( $query );
+		if ( $statement = $this->_query() ) {
 			$this->result = $statement->rowCount();
 		}
-		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
+		$this->debug || $this->debug_once ? $this->_show_debug() : null;
 		$this->debug_once = false;
 		return $this->result;
 	}
 	
 	
 	/**
-	 * executes query and returns single variable
+	 * execute query and returns single variable
 	 *
 	 * @access	public
 	 * @param 	string	$query		query to execute
@@ -105,18 +113,19 @@ class db {
 	 */
 	public function get_var( $query ) {
 		$this->method = __METHOD__;
-		if ( $statement = $this->_query( $query ) ) {
+		$this->query = trim( $query );
+		if ( $statement = $this->_query() ) {
 			$this->result = $statement->fetchColumn();
  			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
 		}
-		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
+		$this->debug || $this->debug_once ? $this->_show_debug() : null;
 		$this->debug_once = false;
 		return $this->result;
 	}
 	
 	
 	/**
-	 * executes query and returns single row in associative array or object (defined by $output)
+	 * execute query and returns single row in associative array or object (defined by $output)
 	 *
 	 * @access	public
 	 * @param 	string	$query
@@ -125,19 +134,20 @@ class db {
 	 */
 	public function get_row( $query, $output='OBJECT' ) {
 		$this->method = __METHOD__;
- 		if ( $statement = $this->_query( $query ) ) {
-			$output = array_key_exists( $this->output, $this->mode ) ? $output : key( $this->mode );
+		$this->query = trim( $query );
+ 		if ( $statement = $this->_query() ) {
+			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetch( $this->mode[$output] );
  			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
  		}
-		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
+		$this->debug || $this->debug_once ? $this->_show_debug() : null;
  		$this->debug_once = false;
  		return $this->result;
 	}
 	
 	
 	/**
-	 * executes query and returns single column in indexed array
+	 * execute query and returns single column in indexed array
 	 *
 	 * @access	public
 	 * @param 	string	$query
@@ -145,20 +155,21 @@ class db {
 	 */
 	public function get_col( $query ) {
 		$this->method = __METHOD__;
-		if ( $statement = $this->_query( $query ) ) {
+		$this->query = trim( $query );
+		if ( $statement = $this->_query() ) {
 			while ( $row = $statement->fetchColumn() ) {
 				$this->result[] = $row;
 			}
 		}
-		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
+		$this->debug || $this->debug_once ? $this->_show_debug() : null;
  		$this->debug_once = false;
 		return $this->result;
  	}
 	
 	
 	/**
-	 * executes query and return all rows in indexed array
-	 * rows can be returned as associative array or object (defined by $output)
+	 * execute query and return rows as indexed array
+	 * rows can be an associative array or object (defined by $output)
 	 *
 	 * @access	public
 	 * @param 	string	$query
@@ -167,19 +178,20 @@ class db {
 	 */
 	public function get_results( $query, $output='OBJECT' ) {
 		$this->method = __METHOD__;
- 		if ( $statement = $this->_query( $query ) ) {
+		$this->query = trim( $query );
+ 		if ( $statement = $this->_query() ) {
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetchAll( $this->mode[$output] );
  		}
-		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
+		$this->debug || $this->debug_once ? $this->_show_debug() : null;
 		$this->debug_once = false;
 		return $this->result;
 	}
 	
 	
 	/**
-	 * executes query and return all rows in associative array (key defined by $col)
-	 * rows can be returned as associative array or object (defined by $output)
+	 * execute query and return rows as associative array (key defined by $col)
+	 * rows can be an associative array or object (defined by $output)
 	 *
 	 * @access	public
 	 * @param 	string	$query
@@ -188,7 +200,8 @@ class db {
 	 */
 	public function get_assoc( $query, $col, $output='OBJECT' ) {
 		$this->method = __METHOD__;
- 		if ( $statement = $this->_query( $query ) ) {
+		$this->query = trim( $query );
+ 		if ( $statement = $this->_query() ) {
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			while ( $row = $statement->fetch( $this->mode[$output] ) ) {
  				if ( $output == 'OBJECT' ) {
@@ -198,14 +211,14 @@ class db {
  				}
  			}
  		}
-		( $this->debug || $this->debug_once ? $this->_show_debug( $query, $result ) : null );
+		$this->debug || $this->debug_once ? $this->_show_debug() : null;
  		$this->debug_once = false;
 		return $this->result;
 	}
 	
 	
 	/**
-	 * returns escaped string for safe query
+	 * return escaped string for safe query
 	 *
 	 * @access	public
 	 * @param		string $string
@@ -217,7 +230,7 @@ class db {
 	
 	
 	/**
-	 * turns on or off errors displaying
+	 * turn on or off errors displaying
 	 *
 	 * @access	public
 	 * @param		bool		$state
@@ -228,7 +241,7 @@ class db {
 	
 	
 	/**
-	 * turns on or off debug displaying
+	 * turn on or off debug displaying
 	 *
 	 * @access	public
 	 * @param		bool		$state
@@ -239,7 +252,7 @@ class db {
 	
 	
 	/**
-	 * turns on or off errors displaying for for a single query
+	 * turn on or off errors displaying only for single query
 	 *
 	 * @access	public
 	 */
@@ -249,15 +262,14 @@ class db {
 	
 	
 	/**
-	 * prepares query to execute
+	 * prepare query to execute
 	 *
 	 * @access	private
 	 * @param		string		$query
 	 * @return	object
 	 */
-	private function _query( $query ) {
+	private function _query() {
 		$this->_reset();
-		$this->query = trim( $query );
 		if ( $this->pdo ) {
 			$statement = $this->pdo->query( $this->query );
 			$error = $this->pdo->errorInfo();
@@ -280,13 +292,12 @@ class db {
 	
 	
 	/**
-	 * resets variables specific for each query
+	 * reset variables specific for each query
 	 *
 	 * @access	private
 	 */
 	private function _reset() {
 		$this->start_time = microtime(true);
-		$this->query = null;
 		$this->insert_id = null;
 		$this->affected_rows = null;
 		$this->num_rows = null;
@@ -308,7 +319,7 @@ class db {
 		
 	
 	/**
-	 * displays query debug (method name, query string, execution time, number of rows in result, affected rows, insert ID, query result)
+	 * display query debug (method name, query string, execution time, number of rows in result, affected rows, insert ID, query result)
 	 *
 	 * @access	private
 	 */
@@ -319,7 +330,7 @@ class db {
 		echo $this->num_rows !== null ? '<br /><b>NUM_ROWS:</b> ' . $this->num_rows : '';
 		echo $this->affected_rows !== null ? '<br /><b>AFFECTED_ROWS:</b> ' . $this->affected_rows : '';
 		echo $this->insert_id !== null ? '<br /><b>INSERT_ID:</b> ' . $this->insert_id : '';
-		echo '<br /><b>DB_RESULT:</b>:';
+		echo '<br /><b>DB_RESULT:</b>';
 		echo '<pre>';
 		print_r( $this->result );
 		echo '</pre>';
@@ -328,7 +339,7 @@ class db {
 	
 	
 	/**
-	 * displays error
+	 * display query errors
 	 *
 	 * @access	private
 	 * @param		string		$txt

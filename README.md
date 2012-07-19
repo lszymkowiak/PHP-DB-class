@@ -1,7 +1,11 @@
-PHP-DB-class
+[PHP-DB-class](http://lszymkowiak.pl/db)
 =============
 
-provide an easy way to work with databases with PHP using PDO extension
+provide an easy way to work with databases with [PHP](http://www.php.net/) using [PDO](http://www.php.net/manual/en/book.pdo.php) extension
+
+phpDocumentor documentation
+---------------------------
+[http://lszymkowiak.pl/db/docs.html](http://lszymkowiak.pl/db/docs.html)
 
 Initialization
 --------------
