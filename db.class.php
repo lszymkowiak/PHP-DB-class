@@ -5,7 +5,7 @@
  *
  * method names and some code are based on ezSQL by Justin Vincent
  *
- * @version		2.0
+ * @version		2.0.1
  * @author		Łukasz Szymkowiak
  * @link			http://www.lszymkowiak.pl/db
  * @license		This work is licensed under a Creative Commons Attribution 3.0 Unported License. 
@@ -116,7 +116,7 @@ class db {
 		$this->query = trim( $query );
 		if ( $statement = $this->_query() ) {
 			$this->result = $statement->fetchColumn();
- 			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
+			$this->num_rows = $this->result === false ? 0 : count( $this->result );
 		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
 		$this->debug_once = false;
@@ -138,7 +138,7 @@ class db {
  		if ( $statement = $this->_query() ) {
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetch( $this->mode[$output] );
- 			$this->num_rows = ( $this->num_rows > 0 ? 1 : 0 );
+			$this->num_rows = count( $this->result );
  		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
  		$this->debug_once = false;
@@ -159,6 +159,7 @@ class db {
 		if ( $statement = $this->_query() ) {
 			while ( $row = $statement->fetchColumn() ) {
 				$this->result[] = $row;
+				$this->num_rows++;
 			}
 		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
@@ -182,6 +183,7 @@ class db {
  		if ( $statement = $this->_query() ) {
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
 			$this->result = $statement->fetchAll( $this->mode[$output] );
+			$this->num_rows = count( $this->result );
  		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
 		$this->debug_once = false;
@@ -209,6 +211,7 @@ class db {
  				} else {
  					$this->result[$row[$col]] = $row;
  				}
+				$this->num_rows++;
  			}
  		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
@@ -282,9 +285,6 @@ class db {
 				if ( preg_match( "/^\s*(insert|replace)\s+/i", strtolower( $this->query ) ) ) {
  					$this->insert_id = $this->pdo->lastInsertId();	
  				}
-				if ( preg_match( "/^\s*(select)\s+/i", strtolower( $this->query ) ) ) {
-					$this->num_rows = $statement->rowCount();
-				}
  				return $statement;
 			}
 		}
