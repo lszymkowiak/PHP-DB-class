@@ -3,10 +3,6 @@
 
 provide an easy way to work with databases with [PHP](http://www.php.net/) using [PDO](http://www.php.net/manual/en/book.pdo.php) extension
 
-phpDocumentor documentation
----------------------------
-[http://lszymkowiak.pl/db/docs.html](http://lszymkowiak.pl/db/docs.html)
-
 Initialization
 --------------
 
@@ -22,74 +18,73 @@ Initialization
 
 **db\_password**  - database password, optional if not specified null is passed
 
-More information about connecting databesa using PDO can be found in [PHP Manual](http://www.php.net/manual/en/pdo.construct.php)
+More information about connecting to databesa using PDO can be found in [PHP Manual](http://www.php.net/manual/en/pdo.construct.php)
 
 *MySQL example:*
 
-    db::configure( 'db_dsn', 'mysql:host=localhost;dbname=example' );
+    db::configure( 'db_dsn', 'mysql:host=localhost;dbname=php_db_class' );
     db::configure( 'db_user', 'user' );
     db::configure( 'db_password', 'passwd' );
 
 *PostgreSQL example:*
 
-    db::configure( 'db_dsn', 'pgsql:host=localhost;port=5432;dbname=example;user=user;password=passwd' );
+    db::configure( 'db_dsn', 'pgsql:host=localhost;port=5432;dbname=php_db_class;user=user;password=passwd' );
 
 
 ### 3. Initialize db class object ###
 
     $db = db::get_instance();
 
-Database manipulation
----------------------
+Public methods
+--------------
 
-### Example 1 ###
+### query( $query ) ###
 
-insert row into database and retrieve inserted row ID
+Execute query and return the number of affected rows.
+Designed for queries like insert,update,replace,delete, etc which doesn't return any results.
 
     $db->query( "INSERT INTO users SET name='John Smith', date_of_birth='1990-01-01'" );
-    echo $db->insert_id;
+    $db->query( "UPDATE users SET date_of_birth='1995-01-01' WHERE id='1'" );
 
-### Example 2 ###
+### get_var( $query ) ###
 
-update database and retrieve number affected rows
+Select single variable from database.
 
-    $db->query( "UPDATE users SET date_of_birth='1995-01-01' WHERE id='{$id}'" );
-    echo $db->affected_rows;
+    echo $db->get_var( "SELECT date_of_birth FROM users WHERE name='1'" );
 
-### Example 3 ###
+### get_row( $query, $output='OBJECT' ) ###
 
-select single variable
+Select single row and return it as object or associative array.
+Type of returned variable can be defined by second parameter: 'OBJECT' (default) or 'ARRAY'.
 
-    echo $db->get_var( "SELECT date_of_birth FROM users WHERE name='{$id}'" );
+*object example*
 
-### Example 4 ###
+    $user = $db->get_row( "SELECT name,date_of_birth FROM users WHERE id='1'" );
+	  echo $user->name;
+	  echo $user->date_of_birth;
 
-select one row and return it as object
+*array example*
 
-    $user = $db->get_row( "SELECT name,date_of_birth FROM users WHERE id='{$id}'" );
-    echo $user->name;
-    echo $user->date_of_birth;
+    $user = $db->get_row( "SELECT name,date_of_birth FROM users WHERE id='1'", 'ARRAY' );
+	  echo $user['name'];
+	  echo $user['date_of_birth'];
 
-### Example 5 ###
+### get_col( $query ) ###
 
-Select one row and return it as associative array
-
-    $user = $db->get_row( "SELECT name,date_of_birth FROM users WHERE id='{$id}'", 'ARRAY' );
-    echo $user['name'];
-    echo $user['date_of_birth'];
-
-### Example 6 ###
-
-select one column
+Select select column and return it as indexed array.
 
     $users = $db->get_col( "SELECT name FROM users ORDER BY date_of_birth" );
     foreach( $users as $name ) {
         echo $name;
     }
 
-### Example 7 ###
+### get_results( $query, $output='OBJECT' ) ###
 
-select multiple rows and return it as an array of objects
+Select multiple rows.
+Type of returned variable can be array of objects or array of associative array.
+It can be defined by second parameter: 'OBJECT' (default) or 'ARRAY'.
+
+*object example*:
 
     $users = $db->get_results( "SELECT name,date_of_birth FROM users ORDER BY date_of_birth" );
     foreach( $users as $user ) {
@@ -97,9 +92,8 @@ select multiple rows and return it as an array of objects
         echo $user->date_of_birth;
     }
 
-### Example 8 ###
+*array example*:
 
-select multiple rows nd return it as an array of associative array
 
     $users = $db->get_results( "SELECT name,date_of_birth FROM users ORDER BY date_of_birth", 'ARRAY' );
     foreach( $users as $user ) {
@@ -107,25 +101,78 @@ select multiple rows nd return it as an array of associative array
         echo $user['date_of_birth'];
     }
 
-### Example 9 ###
+### get_assoc( $query, $col, $output='OBJECT' ) ###
 
-select multiple rows and return it as an associative array of objects (with key defined as one of selected columns) 
+Select multiple rows and return it as an associative array (key defined as one of selected columns) of object or associative array.
 
-    $users = $db->get_assoc( "SELECT id,name,date_of_birth FROM users ORDER BY date_of_birth", 'date_of_birth' );
-    echo $user['1995-01-01']->name;
-    echo $user['1995-01-01']->date_of_birth;
+*object example*:
 
-### Example 10 ###
+    $id_user = 1;
+		$users = $db->get_assoc( "SELECT id,name,date_of_birth FROM users ORDER BY date_of_birth", 'id' );
+    echo $user[$id_user]->name;
+    echo $user[$id_user]->date_of_birth;
 
-select multiple rows and return it as an associative array of associative array (with key defined as one of selected columns)
+*array example*:
 
-    $users = $db->get_assoc( "SELECT id,name,date_of_birth FROM users ORDER BY date_of_birth", 'date_of_birth', 'ARRAY' );
-    echo $user['1995-01-01']['name'];
-    echo $user['1995-01-01']['date_of_birth'];
+    $id_user
+		$users = $db->get_assoc( "SELECT id,name,date_of_birth FROM users ORDER BY date_of_birth", 'id', 'ARRAY' );
+    echo $user[$id_user]['name'];
+    echo $user[$id_user]['date_of_birth'];
 
-### Example 11 ###
 
-display debug for the next query
+### debug( $state ) ###
+
+Turn on or off debug display.
+Debug is turned off by default.
+
+    $db->debug( true );
+    $db->get_results( "SELECT name,date_of_birth FROM users ORDER BY date_of_birth" );
+    $db->debug( false );
+
+### debug_once() ###
+
+Turn on debug display only for the next query
 
     $db->debug_once();
     $db->get_results( "SELECT name,date_of_birth FROM users ORDER BY date_of_birth" );
+
+### error( $state ) ###
+
+Turn on or off query error display.
+Error is turned on by default.
+
+    $db->error( true );
+    $db->get_results( "SELEC name,date_of_birth FROM users ORDER BY date_of_birth" );
+    $db->error( false );
+
+### escape( $tring ) ###
+
+Return escaped string for safe query
+
+    $name = "Patrick O'Brian";
+    $db->query( "INSERT INTO users name='".$db->escape($name)."', date_of_birth='1914-12-12'" );
+
+		
+Public properties
+-----------------
+
+### insert_id ###
+
+Insert ID from last query.
+
+    $db->query( "INSERT INTO users SET name='John Smith', date_of_birth='1990-01-01'" );
+    echo $db->insert_id
+
+### affected_rows ###
+
+Number of rows affected by query() method.
+
+    $db->query( "UPDATE users SET date_of_birth='1990-01-01'" );
+    echo $db->affected_rows;
+
+### num_rows ###
+
+Number of rows returned by select query.
+
+    $db->get_results( "SELECT name,date_of_birth FROM users WHERE date_of_birth>='1990-01-01' ORDER BY date_of_birth" );
+    echo $db->num_rows;
