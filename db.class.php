@@ -5,7 +5,7 @@
  *
  * method names and some code are based on ezSQL by Justin Vincent
  *
- * @version		2.0.1
+ * @version		2.0.2
  * @author		Łukasz Szymkowiak
  * @link			http://www.lszymkowiak.pl/db
  * @license		This work is licensed under a Creative Commons Attribution 3.0 Unported License. 
@@ -276,7 +276,7 @@ class db {
 		if ( $this->pdo ) {
 			$statement = $this->pdo->query( $this->query );
 			$error = $this->pdo->errorInfo();
- 			if ( $error['1'] ) {
+			if ( $statement == false && isset( $error['1'] ) ) {
 				$this->_show_error( $error['2'] );
 			} else {
 				if ( preg_match( "/^\s*(insert|update|replace|delete)\s+/i", strtolower( $this->query ) ) ) {
