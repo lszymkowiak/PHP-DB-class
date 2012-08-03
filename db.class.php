@@ -276,7 +276,7 @@ class db {
 		if ( $this->pdo ) {
 			$statement = $this->pdo->query( $this->query );
 			$error = $this->pdo->errorInfo();
- 			if ( $error['1'] ) {
+			if ( $statement == false && isset( $error['1'] ) ) {
 				$this->_show_error( $error['2'] );
 			} else {
 				if ( preg_match( "/^\s*(insert|update|replace|delete)\s+/i", strtolower( $this->query ) ) ) {
