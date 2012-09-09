@@ -5,7 +5,7 @@
  *
  * method names and some code are based on ezSQL by Justin Vincent
  *
- * @version		2.0.2
+ * @version		2.0.3
  * @author		Łukasz Szymkowiak
  * @link			http://www.lszymkowiak.pl/db
  * @license		This work is licensed under a Creative Commons Attribution 3.0 Unported License. 
@@ -59,7 +59,7 @@ class db {
 	
 	
 	/**
-	 * singelton instance
+	 * singleton instance
 	 *
 	 * @access  public
 	 */
@@ -120,7 +120,7 @@ class db {
 		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
 		$this->debug_once = false;
-		return $this->result;
+		return (string) $this->result;
 	}
 	
 	
@@ -137,8 +137,11 @@ class db {
 		$this->query = trim( $query );
  		if ( $statement = $this->_query() ) {
 			$output = array_key_exists( $output, $this->mode ) ? $output : key( $this->mode );
-			$this->result = $statement->fetch( $this->mode[$output] );
-			$this->num_rows = count( $this->result );
+			if ( $result = $statement->fetch( $this->mode[$output] ) ) {
+				$this->result = $result;
+				$this->num_rows = 1;
+				unset( $result );
+			}
  		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
  		$this->debug_once = false;
@@ -212,6 +215,7 @@ class db {
  					$this->result[$row[$col]] = $row;
  				}
 				$this->num_rows++;
+				unset($row);
  			}
  		}
 		$this->debug || $this->debug_once ? $this->_show_debug() : null;
@@ -306,17 +310,14 @@ class db {
 				$this->result = 0;
 				break;
 			case __CLASS__.'::get_var':
-				$this->result = false;
-				break;
-			case __CLASS__.'::get_row':
-				$this->result = ( $this->output == 'ARRAY' ? array() : null );
+				$this->result = '';
 				break;
 			default:
 				$this->result = array();
 				break;
 		}
 	}
-		
+	
 	
 	/**
 	 * display query debug (method name, query string, execution time, number of rows in result, affected rows, insert ID, query result)
