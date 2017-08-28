@@ -1,0 +1,12 @@
+{
+    "name": "lszymkowiak/php-db-class",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Łukasz Szymkowiak",
+            "email": "ryzy82@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
